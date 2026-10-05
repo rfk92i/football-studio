@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Football Cinématique</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0e14;--panel:#121820;--panel2:#1a2230;--bd:#232e40;--ink:#e8ecf0;--dim:#7a8a9e;
+--ok:#2d8a4e;--err:#c0392b;--warn:#d4a017;--info:#4a6cf7;--ac:#e85d2a;--ac2:#f0a030;--r:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;background:var(--bg);
+color:var(--ink);min-height:100vh;padding:1.2rem .9rem 8rem;font-size:15px;line-height:1.5;
+max-width:900px;margin:0 auto;background-image:radial-gradient(circle at 20% 0%,rgba(232,93,42,.06),transparent 50%),
+radial-gradient(circle at 80% 100%,rgba(74,108,247,.05),transparent 50%)}
+header{margin-bottom:1.2rem;text-align:center;padding:.5rem 0}
+h1{font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,#e85d2a,#f0a030);
+-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:.78rem;color:var(--dim);font-style:italic;margin-top:.2rem}
+.toast{position:fixed;top:1.2rem;left:50%;transform:translateX(-50%) translateY(-120px);background:var(--panel);
+border:1px solid var(--bd);border-left:3px solid var(--ac);padding:.8rem 1.2rem;border-radius:10px;
+font-size:.82rem;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:1000;opacity:0;
+transition:transform .35s cubic-bezier(.2,.9,.3,1.2),opacity .35s;max-width:90vw;text-align:center;
+display:flex;align-items:center;gap:.5rem}
+.toast.visible{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{border-left-color:var(--ok)}.toast.error{border-left-color:var(--err)}.toast.warn{border-left-color:var(--warn)}
+.banner{background:linear-gradient(135deg,rgba(232,93,42,.06),rgba(74,108,247,.04));
+border:1px solid var(--bd);border-left:2px solid var(--ac);padding:.75rem .95rem;border-radius:8px;
+font-size:.76rem;color:var(--dim);margin-bottom:1rem;line-height:1.5}
+.banner strong{color:var(--ink)}
+.section{background:var(--panel);border:1px solid var(--bd);border-radius:var(--r);margin-bottom:.8rem;overflow:hidden}
+.sh{padding:.85rem 1.1rem;cursor:pointer;user-select:none;display:flex;justify-content:space-between;align-items:center}
+.sh:active{background:var(--panel2)}
+.st{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);font-weight:700;
+display:flex;align-items:center;gap:.4rem}
+.st .bdg{padding:.1rem .4rem;background:var(--ac);color:#fff;border-radius:10px;font-size:.6rem;letter-spacing:0}
+.st .bdg.soft{background:var(--info)}
+.chv{font-size:.65rem;color:var(--dim);transition:transform .2s}
+.section.open .chv{transform:rotate(180deg)}
+.sb{max-height:0;overflow:hidden;transition:max-height .35s}
+.section.open .sb{max-height:6000px}
+.sc{padding:0 1.1rem 1.1rem}
+.api{background:var(--panel);border:1px solid var(--bd);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:.8rem}
+.api.ok{box-shadow:inset 3px 0 0 var(--ok)}
+.akey{width:100%;padding:.8rem .95rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg);
+color:var(--ink);font-family:ui-monospace,monospace;font-size:.8rem;margin-bottom:.5rem}
+.akey:focus{outline:none;border-color:var(--ac)}
+.asave{width:100%;padding:.75rem;border-radius:8px;border:none;background:linear-gradient(135deg,var(--ac),var(--ac2));
+color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;margin-bottom:.5rem;font-family:inherit}
+.asave:active{transform:scale(.98)}
+.astat{font-size:.72rem;padding:.5rem .8rem;border-radius:6px;display:flex;align-items:center;gap:.5rem;
+background:var(--panel2);color:var(--dim)}
+.astat.ok{background:rgba(45,138,78,.1);color:var(--ok)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.astat.ok .dot{background:var(--ok)}
+.ahint{font-size:.68rem;color:var(--dim);margin-top:.4rem}
+.ahint a{color:var(--info);text-decoration:none}
+.stat{font-size:.68rem;color:var(--dim);margin-top:.4rem;padding:.4rem .6rem;background:var(--panel2);
+border-radius:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.3rem;
+font-family:ui-monospace,monospace}
+.uz{border:2px dashed var(--bd);border-radius:var(--r);padding:1.6rem 1rem;text-align:center;
+cursor:pointer;margin-bottom:.8rem;background:var(--panel);position:relative;transition:border-color .2s}
+.uz:active{border-color:var(--ac);background:var(--panel2)}
+.uz.loading{pointer-events:none;opacity:.6}
+.uz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.uic{font-size:2rem;margin-bottom:.4rem;opacity:.6}
+.ut{font-size:.88rem;margin-bottom:.15rem}
+.uh{font-size:.7rem;color:var(--dim)}
+.rp{position:relative;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);background:#000;margin-bottom:.8rem}
+.rp img{width:100%;display:block;max-height:340px;object-fit:contain}
+.rp .rlb{position:absolute;bottom:0;left:0;right:0;padding:.4rem .7rem;
+background:linear-gradient(transparent,rgba(0,0,0,.85));font-size:.65rem;color:var(--ac2);
+font-family:ui-monospace,monospace}
+.rrm{position:absolute;top:.4rem;right:.4rem;background:rgba(192,57,43,.85);color:#fff;border:none;
+width:28px;height:28px;border-radius:50%;font-size:.85rem;cursor:pointer;display:flex;
+align-items:center;justify-content:center;font-family:inherit}
+.cr{margin-bottom:.8rem}
+.cl{display:block;font-size:.68rem;color:var(--dim);margin-bottom:.35rem;text-transform:uppercase;
+letter-spacing:.08em;font-weight:700}
+select{width:100%;padding:.7rem .85rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg);
+color:var(--ink);font-family:inherit;font-size:.85rem;-webkit-appearance:none;appearance:none;
+background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%237a8a9e' d='M0 0l5 6 5-6z'/></svg>");
+background-repeat:no-repeat;background-position:right .85rem center;background-size:10px}
+select:focus{outline:none;border-color:var(--ac)}
+select option{background:var(--panel)}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+.chip{padding:.35rem .7rem;border-radius:16px;border:1px solid var(--bd);background:var(--panel2);
+font-size:.68rem;cursor:pointer;user-select:none}
+.chip:active{transform:scale(.96);border-color:var(--ac)}
+.pm{width:100%;padding:.8rem .95rem;border-radius:8px;border:1px solid var(--bd);background:var(--bg);
+color:var(--ink);font-family:inherit;font-size:.85rem;min-height:100px;resize:vertical;line-height:1.5}
+.pm:focus{outline:none;border-color:var(--ac)}
+.bp{width:100%;padding:1.1rem;border-radius:var(--r);border:none;
+background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;font-size:.95rem;font-weight:700;
+cursor:pointer;margin-bottom:.8rem;letter-spacing:.05em;font-family:inherit}
+.bp:disabled{opacity:.3;cursor:not-allowed}
+.bp:active:not(:disabled){transform:scale(.98)}
+.bs{width:100%;padding:.8rem;border-radius:var(--r);border:1px solid var(--err);background:transparent;
+color:var(--err);font-size:.82rem;font-weight:700;cursor:pointer;margin-bottom:.8rem;display:none;font-family:inherit}
+.bs.visible{display:block}
+.q{margin-top:.8rem}
+.qs{background:var(--panel);border:1px solid var(--bd);border-left:2px solid var(--ac);border-radius:8px;
+padding:.7rem .9rem;margin-bottom:.6rem;font-size:.75rem;display:flex;justify-content:space-between;
+flex-wrap:wrap;gap:.4rem;font-family:ui-monospace,monospace}
+.qs .pt{color:var(--ac2);font-weight:700}
+.qi{display:flex;align-items:center;gap:.7rem;padding:.65rem .8rem;border-radius:8px;
+border:1px solid var(--bd);margin-bottom:.35rem;background:var(--panel);font-size:.78rem}
+.qi.pending{opacity:.45}
+.qi.creating{border-color:var(--warn)}
+.qi.processing{border-color:var(--info);background:rgba(74,108,247,.04)}
+.qi.done{border-color:var(--ok);background:rgba(45,138,78,.04)}
+.qi.failed{border-color:var(--err);background:rgba(192,57,43,.04)}
+.qi .qic{font-size:.9rem;width:1.3rem;text-align:center;flex-shrink:0}
+.qi .qn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qi .qst{font-size:.68rem;color:var(--dim);text-align:right;max-width:55%;overflow:hidden;
+text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,monospace}
+.gal{margin-top:1.2rem}
+.galg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem}
+.gi{border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);background:#000;animation:fi .4s ease}
+.gi video{width:100%;display:block;aspect-ratio:9/16;object-fit:cover;background:#000}
+.gi .gc{padding:.5rem .6rem;background:var(--panel);font-size:.68rem;color:var(--dim)}
+.gi .gc strong{color:var(--ac2)}
+.sb2{position:fixed;bottom:0;left:0;right:0;background:var(--panel);border-top:1px solid var(--bd);
+color:var(--ink);padding:.7rem 1rem;font-size:.75rem;display:flex;align-items:center;gap:.6rem;
+transform:translateY(100%);transition:transform .3s;z-index:100;font-family:ui-monospace,monospace}
+.sb2.visible{transform:translateY(0)}
+.sp{width:12px;height:12px;border:2px solid rgba(232,93,42,.2);border-top-color:var(--ac);border-radius:50%;
+animation:sp .8s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.hidden{display:none!important}
+#nsc,#nsv{position:fixed;top:0;left:0;width:1px;height:1px;opacity:.01;pointer-events:none;z-index:-1}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Football Cinématique</h1>
+  <p class="sub">Transformez vos images en actions de match spectaculaires</p>
+</header>
+
+<div class="banner">
+  <strong>Comment ça marche :</strong> Ajoutez une photo de joueur, de stade ou d'action.
+  L'IA anime votre image avec des mouvements cinématographiques de football — but, célébration, ralenti, vue aérienne.
+  Format <strong>portrait 9:16</strong>, sans musique.
+</div>
+
+<div class="api" id="apiPanel">
+  <input type="password" class="akey" id="apiKey" placeholder="Collez votre clé API ici (sk-...)" autocomplete="off" spellcheck="false">
+  <button type="button" class="asave" id="apiSave">Enregistrer la clé</button>
+  <div class="astat" id="apiStat"><span class="dot"></span><span id="apiStatTxt">Aucune clé API enregistrée</span></div>
+  <div class="ahint">Clé gratuite sur <a href="https://platform.agnes-ai.com" target="_blank" rel="noopener">platform.agnes-ai.com</a></div>
+  <div class="stat"><span>📊 Vitesse vidéo : <span id="statSpeed">en attente</span></span><span id="statSamples">0 génération</span></div>
+</div>
+
+<div class="section open" id="sRef">
+  <div class="sh" data-tog="sRef"><span class="st">📸 Image de référence <span class="bdg">obligatoire</span></span><span class="chv">▼</span></div>
+  <div class="sb"><div class="sc">
+    <div class="uz" id="uz">
+      <input type="file" accept="image/*" id="fileInput">
+      <div class="uic">⚽</div>
+      <div class="ut">Ajoutez une image de joueur ou de stade</div>
+      <div class="uh">Cette image sera la première image de votre vidéo</div>
+    </div>
+    <div id="refPreview"></div>
+  </div></div>
+</div>
+
+<div class="section open" id="sPrompt">
+  <div class="sh" data-tog="sPrompt"><span class="st">✍️ Action souhaitée <span class="bdg soft">recommandé</span></span><span class="chv">▼</span></div>
+  <div class="sb"><div class="sc">
+    <textarea class="pm" id="mainPrompt" placeholder="Décrivez l'action de football..."></textarea>
+    <div class="chips" id="chips"></div>
+  </div></div>
+</div>
+
+<div class="section" id="sTech">
+  <div class="sh" data-tog="sTech"><span class="st">📷 Réglages techniques</span><span class="chv">▼</span></div>
+  <div class="sb"><div class="sc">
+    <div class="cr">
+      <label class="cl">Durée de la vidéo</label>
+      <select id="durSel">
+        <option value="121">5 secondes (121 frames)</option>
+        <option value="169" selected>7 secondes (169 frames)</option>
+        <option value="241">10 secondes (241 frames)</option>
+      </select>
+    </div>
+    <div class="cr">
+      <label class="cl">Type de mouvement</label>
+      <select id="motionSel">
+        <option value="goal">⚽ But & célébration</option>
+        <option value="slowmo">🎬 Ralenti dramatique</option>
+        <option value="dribble">🏃 Dribble & course</option>
+        <option value="stadium">🏟️ Vue de stade / drone</option>
+        <option value="save">🧤 Arrêt du gardien</option>
+        <option value="victory">🏆 Victoire & trophée</option>
+      </select>
+    </div>
+    <div class="cr">
+      <label class="cl">Intensité du mouvement</label>
+      <select id="intSel">
+        <option value="subtle">Subtile — contemplative</option>
+        <option value="moderate" selected>Modérée — élégante</option>
+        <option value="strong">Forte — explosive, dynamique</option>
+      </select>
+    </div>
+  </div></div>
+</div>
+
+<button type="button" class="bp" id="genBtn" disabled>Ajoutez votre clé API</button>
+<button type="button" class="bs" id="stopBtn">⏹ Arrêter la génération</button>
+
+<div class="q" id="queue" style="display:none"></div>
+
+<div class="gal" id="gallery" style="display:none">
+  <div class="st" style="margin-bottom:.6rem">Vidéo générée</div>
+  <div class="galg" id="galGrid"></div>
+</div>
+
+<div class="sb2" id="statusBar"><div class="sp"></div><span id="statusTxt">Préparation…</span></div>
+<div class="toast" id="toast"><span id="toastIc">✓</span><span id="toastTxt">Message</span></div>
+
+<canvas id="nsc" width="2" height="2"></canvas>
+<video id="nsv" playsinline muted loop></video> <script>
+(function(){
+'use strict';
+
+const API_BASE='https://apihub.agnes-ai.com/v1';
+const POLL_BASE='https://apihub.agnes-ai.com/agnesapi';
+const MODEL_VIDEO='agnes-video-v2.0';
+const FRAME_RATE=24;
+const VIDEO_FIRST_POLL_DELAY_SEC=80;
+const VIDEO_POLL_INTERVALS=[8,8,12,12,20,20,25];
+const VIDEO_MAX_POLL_ATTEMPTS=100;
+const API_KEY_STORAGE='agnes_api_key_football_v1';
+const TIMING_CACHE_KEY='agnes_timing_cache_football_v1';
+const REF_MAX_SIDE=1280;
+
+const state={referenceImage:null,mainPrompt:'',motionType:'goal',intensity:'moderate',durationFrames:169,isRunning:false,stopRequested:false,currentVideoId:null,currentVideoStartTime:null};
+
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let toastT=null;
+function toast(msg,type='success',dur=2500){
+  const t=$('toast'),i=$('toastIc'),x=$('toastTxt');
+  if(!t||!i||!x)return;
+  t.classList.remove('visible','success','error','warn');
+  void t.offsetWidth;
+  i.textContent={success:'✓',error:'✕',warn:'⚠'}[type]||'✓';
+  x.textContent=msg;
+  t.classList.add(type);
+  requestAnimationFrame(()=>t.classList.add('visible'));
+  if(toastT)clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('visible'),dur);
+}
+
+function setStatus(text){
+  const b=$('statusBar'),t=$('statusTxt');
+  if(!b||!t)return;
+  if(text){b.classList.add('visible');t.textContent=text;}
+  else b.classList.remove('visible');
+}
+function fmtEta(s){
+  if(s<60)return Math.round(s)+'s';
+  const m=Math.floor(s/60),r=Math.round(s%60);
+  return m+'m'+(r>0?' '+r+'s':'');
+}
+
+function loadTiming(){
+  try{return JSON.parse(localStorage.getItem(TIMING_CACHE_KEY)||'{}');}
+  catch(e){return {};}
+}
+function recordTime(ms){
+  const c=loadTiming(),k=String(state.durationFrames);
+  if(!c[k])c[k]=[];
+  c[k].push(ms);
+  if(c[k].length>10)c[k]=c[k].slice(-10);
+  try{localStorage.setItem(TIMING_CACHE_KEY,JSON.stringify(c));}catch(e){}
+  updateTimingDisplay();
+}
+function estimateTime(){
+  const c=loadTiming(),s=c[String(state.durationFrames)];
+  if(s&&s.length){
+    const sorted=[...s].sort((a,b)=>a-b),mid=Math.floor(sorted.length/2);
+    return sorted.length%2===0?(sorted[mid-1]+sorted[mid])/2:sorted[mid];
+  }
+  return 30000+state.durationFrames*500;
+}
+function updateTimingDisplay(){
+  const c=loadTiming(),all=Object.values(c).flat();
+  const sp=$('statSpeed'),sa=$('statSamples');
+  if(!sp||!sa)return;
+  if(all.length===0){sp.textContent='en attente de données';sa.textContent='0 génération';return;}
+  const avg=all.reduce((a,b)=>a+b,0)/all.length;
+  sp.textContent=(avg/1000).toFixed(1)+' s en moyenne';
+  sa.textContent=all.length+' génération'+(all.length>1?'s':'');
+}
+
+function getKey(){
+  try{return (localStorage.getItem(API_KEY_STORAGE)||'').trim();}
+  catch(e){return '';}
+}
+function saveKey(){
+  const inp=$('apiKey');if(!inp)return;
+  const k=inp.value.trim();
+  if(!k){
+    try{localStorage.removeItem(API_KEY_STORAGE);}catch(e){}
+    updateApiUI();
+    toast('Clé supprimée','warn');
+    return;
+  }
+  if(!k.startsWith('sk-')){
+    if(!confirm('La clé ne commence pas par "sk-". Sauvegarder ?'))return;
+  }
+  try{
+    localStorage.setItem(API_KEY_STORAGE,k);
+    updateApiUI();
+    toast('Clé API enregistrée ✓','success');
+    inp.blur();
+  }catch(e){
+    toast('Erreur sauvegarde','error');
+  }
+}
+function updateApiUI(){
+  const p=$('apiPanel'),i=$('apiKey'),sl=$('apiStat'),st=$('apiStatTxt');
+  if(!p||!i||!sl||!st)return;
+  const k=getKey();
+  if(k){
+    p.classList.add('ok');
+    sl.classList.add('ok');
+    st.textContent='Clé active · '+k.slice(0,8)+'…'+k.slice(-4);
+    i.value=k;
+    i.placeholder='';
+  }else{
+    p.classList.remove('ok');
+    sl.classList.remove('ok');
+    st.textContent='Aucune clé API enregistrée';
+    i.value='';
+    i.placeholder='Collez votre clé API ici (sk-...)';
+  }
+  updateGenBtn();
+}
+function updateGenBtn(){
+  const b=$('genBtn');if(!b)return;
+  const hasK=!!getKey(),hasR=!!state.referenceImage;
+  b.disabled=!hasK||!hasR||state.isRunning;
+  if(state.isRunning)b.textContent='Génération en cours…';
+  else if(!hasK)b.textContent='Ajoutez votre clé API';
+  else if(!hasR)b.textContent='Ajoutez une image de référence';
+  else b.textContent='Créer la vidéo football';
+}
+
+let wlSent=null,csStream=null,csInt=null;
+function isWLSupported(){
+  return 'wakeLock' in navigator&&typeof navigator.wakeLock.request==='function';
+}
+async function reqWL(){
+  if(!isWLSupported())return false;
+  try{
+    wlSent=await navigator.wakeLock.request('screen');
+    wlSent.addEventListener('release',()=>{wlSent=null;});
+    return true;
+  }catch(e){return false;}
+}
+async function relWL(){
+  if(wlSent){try{await wlSent.release();}catch(e){}wlSent=null;}
+}
+function startCS(){
+  if(csStream)return true;
+  try{
+    const c=$('nsc'),v=$('nsv');
+    if(!c||!v)return false;
+    const ctx=c.getContext('2d');
+    ctx.fillStyle='#000';
+    ctx.fillRect(0,0,c.width,c.height);
+    if(typeof c.captureStream!=='function')return false;
+    csStream=c.captureStream(1);
+    let tog=false;
+    csInt=setInterval(()=>{
+      tog=!tog;
+      ctx.fillStyle=tog?'#000':'#010101';
+      ctx.fillRect(0,0,c.width,c.height);
+    },1000);
+    v.srcObject=csStream;
+    v.muted=true;
+    v.playsInline=true;
+    const p=v.play();
+    if(p&&p.catch)p.catch(()=>{});
+    return true;
+  }catch(e){return false;}
+}
+function stopCS(){
+  if(csInt){clearInterval(csInt);csInt=null;}
+  const v=$('nsv');
+  if(v){try{v.pause();v.srcObject=null;}catch(e){}}
+  if(csStream){try{csStream.getTracks().forEach(t=>t.stop());}catch(e){}csStream=null;}
+}
+async function activateWL(){
+  let ok=false;
+  if(isWLSupported())ok=await reqWL();
+  if(!ok)ok=startCS();
+  return ok;
+}
+async function deactivateWL(){
+  await relWL();
+  stopCS();
+}
+
+const MOTION_PROMPTS={
+goal:'The player scores a spectacular goal and celebrates by running toward the camera, arms raised, the crowd erupting in the stands. Cinematic slow motion on the celebration. Keep the player visually IDENTICAL to the reference image: same face, same jersey, same body, same identity.',
+slowmo:'Extreme cinematic slow motion of the player in action — sweat droplets suspended in the air, grass blades flying, every micro-movement visible. Dramatic backlight. Keep the player visually IDENTICAL to the reference image: same face, same jersey, same body, same identity.',
+dribble:'The player dribbles the ball at full speed, weaving past opponents, body low, explosive acceleration, grass flying under his cleats. Dynamic tracking camera. Keep the player visually IDENTICAL to the reference image: same face, same jersey, same body, same identity.',
+stadium:'Aerial drone shot of the stadium at golden hour, the player standing alone on the pitch, the crowd a sea of color, the camera slowly circling and rising. Epic scale. Keep the player visually IDENTICAL to the reference image: same face, same jersey, same body, same identity.',
+save:'The goalkeeper dives at full stretch to save a powerful shot, fingertips grazing the ball, body suspended horizontally in the air. Dramatic slow motion on contact. Keep the goalkeeper visually IDENTICAL to the reference image: same face, same kit, same body, same identity.',
+victory:'The player lifts a trophy high above his head, confetti raining down, the stadium exploding with joy, tears in his eyes, arms trembling with emotion. Cinematic slow motion. Keep the player visually IDENTICAL to the reference image: same face, same jersey, same body, same identity.'
+};
+
+const PRESETS=[
+{label:'⚽ But & célébration',motion:'goal'},
+{label:'🎬 Ralenti dramatique',motion:'slowmo'},
+{label:'🏃 Dribble & course',motion:'dribble'},
+{label:'🏟️ Vue de stade',motion:'stadium'},
+{label:'🧤 Arrêt du gardien',motion:'save'},
+{label:'🏆 Victoire & trophée',motion:'victory'}
+];
+
+const INTENSITY={
+subtle:'extremely subtle and slow movement, meditative, almost imperceptible change, minimal gesture',
+moderate:'moderate movement, clear but controlled motion, elegant and cinematic',
+strong:'explosive dynamic movement, powerful athletic energy, cinematic intensity, dramatic motion'
+};
+
+function buildPrompt(){
+  const motion=MOTION_PROMPTS[state.motionType]||MOTION_PROMPTS.goal;
+  const intensity=INTENSITY[state.intensity]||INTENSITY.moderate;
+  const user=state.mainPrompt&&state.mainPrompt.trim().length>0?state.mainPrompt.trim():'';
+  const parts=[];
+  parts.push('Animate this exact image as the starting frame. The subject must remain IDENTICAL to the input image: same face, same expression, same clothing, same pose, same identity. This is a CONTINUATION of the source image, not a re-imagination.');
+  parts.push(motion);
+  if(user)parts.push('Additional direction (highest priority, must not change subject identity): '+user);
+  parts.push(intensity);
+  parts.push('Cinematic football broadcast cinematography, dynamic camera movement, warm stadium lighting, 35mm film grain, shallow depth of field.');
+  parts.push('Sound design: stadium crowd ambience, whistle, ball impacts, footsteps on grass, no music, no commentary.');
+  parts.push('Portrait orientation 9:16 vertical, 24fps, no text, no subtitles, no watermarks, consistent character design with the source image.');
+  return parts.join('. ');
+} 
+// ══════════════════════════════════════════════════════════════════
+// API FETCH avec retry
+// ══════════════════════════════════════════════════════════════════
+async function apiFetch(url,options,label){
+  label=label||'API';
+  for(let attempt=0;attempt<7;attempt++){
+    if(state.stopRequested)throw new Error('Arrêt demandé');
+    try{
+      const res=await fetch(url,options);
+      if(res.status===429){
+        const wait=[10,20,35,50,75,100,150][Math.min(attempt,6)];
+        setStatus(label+' : limite atteinte, attente '+wait+'s');
+        await sleep(wait*1000);
+        continue;
+      }
+      if(res.status===503){
+        const wait=[5,10,15,20,30,45][Math.min(attempt,5)];
+        setStatus(label+' : service indisponible, attente '+wait+'s');
+        await sleep(wait*1000);
+        continue;
+      }
+      return res;
+    }catch(e){
+      if(e.message==='Arrêt demandé')throw e;
+      const wait=[3,5,8,12,20,30][Math.min(attempt,5)];
+      setStatus(label+' : réseau, retry '+wait+'s');
+      await sleep(wait*1000);
+    }
+  }
+  return fetch(url,options);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CREATE VIDEO TASK
+// ══════════════════════════════════════════════════════════════════
+async function createVideoTask(imageDataUri,prompt){
+  const body={
+    model:MODEL_VIDEO,
+    prompt:prompt,
+    image:imageDataUri,
+    num_frames:state.durationFrames,
+    frame_rate:FRAME_RATE,
+    height:1024,
+    width:576
+  };
+  const res=await apiFetch(API_BASE+'/videos',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+getKey(),'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  },'Création');
+  if(!res.ok){
+    const err=await res.text();
+    throw new Error('HTTP '+res.status+' — '+err.slice(0,200));
+  }
+  const data=await res.json();
+  const videoId=data.video_id||data.id||data.task_id;
+  if(!videoId)throw new Error('Pas de video_id retourné');
+  return videoId;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// POLL VIDEO
+// ══════════════════════════════════════════════════════════════════
+async function pollVideo(videoId,onProgress){
+  const estSec=estimateTime()/1000;
+  const minWait=Math.min(VIDEO_FIRST_POLL_DELAY_SEC,Math.max(60,Math.floor(estSec*0.75)));
+  let remaining=minWait;
+  while(remaining>0){
+    if(state.stopRequested)throw new Error('Arrêt demandé');
+    onProgress('Préparation — '+remaining+'s');
+    await sleep(1000);
+    remaining--;
+  }
+  for(let attempt=0;attempt<VIDEO_MAX_POLL_ATTEMPTS;attempt++){
+    if(state.stopRequested)throw new Error('Arrêt demandé');
+    if(attempt>0){
+      const idx=Math.min(attempt-1,VIDEO_POLL_INTERVALS.length-1);
+      let r=VIDEO_POLL_INTERVALS[idx];
+      while(r>0){
+        if(state.stopRequested)throw new Error('Arrêt demandé');
+        onProgress('L\'image prend vie… — '+r+'s');
+        await sleep(1000);
+        r--;
+      }
+    }
+    const url=POLL_BASE+'?video_id='+encodeURIComponent(videoId)+'&model_name='+encodeURIComponent(MODEL_VIDEO);
+    const res=await apiFetch(url,{
+      method:'GET',
+      headers:{'Authorization':'Bearer '+getKey()}
+    },'Polling');
+    const d=await res.json();
+    const status=d.status||'unknown';
+    const progress=d.progress||0;
+    onProgress('Création — '+progress+'%');
+    if(status==='completed'||status==='succeeded'||status==='done'){
+      const videoUrl=(d.metadata&&d.metadata.url)||d.url||(d.output&&d.output.url);
+      if(!videoUrl)throw new Error('Terminé mais pas d\'URL');
+      return videoUrl;
+    }
+    if(status==='failed'||status==='error'||status==='cancelled'){
+      throw new Error('Échec ('+status+')');
+    }
+  }
+  throw new Error('Délai maximal dépassé');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COMPRESSION IMAGE DE RÉFÉRENCE
+// ══════════════════════════════════════════════════════════════════
+async function compressRef(dataUrl){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      const scale=Math.min(1,REF_MAX_SIDE/Math.max(w,h));
+      w=Math.round(w*scale);
+      h=Math.round(h*scale);
+      const c=document.createElement('canvas');
+      c.width=w;
+      c.height=h;
+      const ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg',0.88));
+    };
+    img.onerror=()=>resolve(dataUrl);
+    img.src=dataUrl;
+  });
+}
+
+async function handleRefImage(file){
+  if(!file)return;
+  if(!file.type.startsWith('image/')){toast('Fichier non image','error');return;}
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const raw=e.target.result;
+    const compressed=await compressRef(raw);
+    state.referenceImage=compressed;
+    updateRefPreview();
+    updateGenBtn();
+    toast('Image de référence prête','success');
+  };
+  reader.onerror=()=>toast('Erreur lecture image','error');
+  reader.readAsDataURL(file);
+}
+
+function updateRefPreview(){
+  const c=$('refPreview');
+  if(!c)return;
+  if(state.referenceImage){
+    c.innerHTML='<div class="rp"><img src="'+state.referenceImage+'" alt="Référence"><div class="rlb">Référence · sera la première image de votre vidéo</div><button type="button" class="rrm" id="refRemoveBtn">✕</button></div>';
+    const btn=$('refRemoveBtn');
+    if(btn)btn.addEventListener('click',()=>{
+      state.referenceImage=null;
+      updateRefPreview();
+      updateGenBtn();
+      toast('Référence supprimée','warn');
+    });
+  }else{
+    c.innerHTML='';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER QUEUE & GALLERY
+// ══════════════════════════════════════════════════════════════════
+function renderQueue(statusText){
+  const q=$('queue');
+  if(!q)return;
+  q.style.display='block';
+  const icon=state.stopRequested?'⏹':(state.isRunning?'◐':'●');
+  const cls=state.stopRequested?'failed':(state.isRunning?'processing':'done');
+  const label=statusText||(state.isRunning?'En cours…':'Prêt');
+  q.innerHTML='<div class="qs"><span class="pt">Génération vidéo</span><span>'+esc(label)+'</span></div>'+
+    '<div class="qi '+cls+'"><div class="qic">'+icon+'</div><div class="qn">'+esc(state.motionType)+' — '+state.durationFrames+' frames</div><div class="qst">'+esc(label)+'</div></div>';
+}
+
+function addToGallery(videoUrl){
+  const g=$('gallery'),grid=$('galGrid');
+  if(!g||!grid)return;
+  g.style.display='block';
+  const el=document.createElement('div');
+  el.className='gi';
+  el.innerHTML='<video controls preload="metadata" playsinline><source src="'+videoUrl+'" type="video/mp4"></video>'+
+    '<div class="gc"><strong>'+esc(state.motionType)+'</strong> · '+(state.durationFrames/24).toFixed(1)+'s · 9:16</div>';
+  grid.appendChild(el);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// START GENERATION
+// ══════════════════════════════════════════════════════════════════
+async function startGeneration(){
+  if(state.isRunning)return;
+  if(!state.referenceImage){toast('Ajoutez une image de référence','error');return;}
+  if(!getKey()){toast('Ajoutez votre clé API','error');$('apiKey').focus();return;}
+
+  state.mainPrompt=$('mainPrompt').value.trim();
+  state.isRunning=true;
+  state.stopRequested=false;
+
+  $('genBtn').disabled=true;
+  $('stopBtn').classList.add('visible');
+  $('galGrid').innerHTML='';
+  $('gallery').style.display='none';
+
+  await activateWL();
+  renderQueue('Envoi de la tâche vidéo…');
+  setStatus('Création de la tâche vidéo…');
+
+  const t0=Date.now();
+  try{
+    const prompt=buildPrompt();
+    const videoId=await createVideoTask(state.referenceImage,prompt);
+    state.currentVideoId=videoId;
+    state.currentVideoStartTime=Date.now();
+
+    renderQueue('En cours…');
+    setStatus('L\'image prend vie…');
+
+    const videoUrl=await pollVideo(videoId,prog=>{
+      renderQueue(prog);
+      setStatus(prog);
+    });
+
+    const elapsed=Date.now()-state.currentVideoStartTime;
+    recordTime(elapsed);
+
+    addToGallery(videoUrl);
+    renderQueue('Terminé en '+(elapsed/1000).toFixed(1)+'s');
+    setStatus('✦ Vidéo terminée en '+(elapsed/1000).toFixed(1)+'s ✦');
+    toast('Vidéo générée en '+(elapsed/1000).toFixed(1)+'s','success',3500);
+    await sleep(4000);
+    setStatus(null);
+  }catch(e){
+    if(e.message==='Arrêt demandé'){
+      renderQueue('Arrêté');
+      setStatus('Arrêté');
+      toast('Génération arrêtée','warn');
+    }else{
+      renderQueue('Échec : '+e.message.slice(0,60));
+      setStatus('Erreur : '+e.message.slice(0,60));
+      toast('Erreur : '+e.message.slice(0,60),'error',4000);
+    }
+    await sleep(4000);
+    setStatus(null);
+  }
+
+  state.isRunning=false;
+  state.stopRequested=false;
+  $('stopBtn').classList.remove('visible');
+  updateGenBtn();
+  await deactivateWL();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STOP GENERATION
+// ══════════════════════════════════════════════════════════════════
+function stopGeneration(){
+  if(!state.isRunning)return;
+  state.stopRequested=true;
+  setStatus('Arrêt en cours…');
+  toast('Arrêt demandé','warn');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+(function init(){
+  updateApiUI();
+  updateTimingDisplay();
+  updateGenBtn();
+
+  const saveBtn=$('apiSave');
+  if(saveBtn)saveBtn.addEventListener('click',saveKey);
+
+  const apiInp=$('apiKey');
+  if(apiInp)apiInp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();saveKey();}
+  });
+
+  document.querySelectorAll('[data-tog]').forEach(h=>{
+    h.addEventListener('click',()=>{
+      const t=$(h.dataset.tog);
+      if(t)t.classList.toggle('open');
+    });
+  });
+
+  const fileInp=$('fileInput');
+  if(fileInp)fileInp.addEventListener('change',e=>{
+    const f=e.target.files&&e.target.files[0];
+    if(f)handleRefImage(f);
+    e.target.value='';
+  });
+
+  const uz=$('uz');
+  if(uz)uz.addEventListener('click',e=>{
+    if(e.target.tagName!=='INPUT'&&fileInp)fileInp.click();
+  });
+
+  const mp=$('mainPrompt');
+  if(mp)mp.addEventListener('input',e=>{state.mainPrompt=e.target.value;});
+
+  const durSel=$('durSel');
+  if(durSel)durSel.addEventListener('change',e=>{
+    state.durationFrames=parseInt(e.target.value,10)||169;
+    updateGenBtn();
+  });
+
+  const motSel=$('motionSel');
+  if(motSel)motSel.addEventListener('change',e=>{
+    state.motionType=e.target.value;
+  });
+
+  const intSel=$('intSel');
+  if(intSel)intSel.addEventListener('change',e=>{
+    state.intensity=e.target.value;
+  });
+
+  const genBtn=$('genBtn');
+  if(genBtn)genBtn.addEventListener('click',startGeneration);
+
+  const stopBtn=$('stopBtn');
+  if(stopBtn)stopBtn.addEventListener('click',stopGeneration);
+
+  const chips=$('chips');
+  if(chips){
+    chips.innerHTML=PRESETS.map((p,i)=>'<div class="chip" data-i="'+i+'">'+esc(p.label)+'</div>').join('');
+    chips.querySelectorAll('.chip').forEach(el=>{
+      el.addEventListener('click',()=>{
+        const idx=parseInt(el.dataset.i,10);
+        const p=PRESETS[idx];
+        if(!p)return;
+        state.motionType=p.motion;
+        if(motSel)motSel.value=p.motion;
+        const ta=$('mainPrompt');
+        if(ta&&!ta.value.trim())ta.value=MOTION_PROMPTS[p.motion];
+        state.mainPrompt=ta?ta.value:'';
+        toast('Preset appliqué : '+p.label,'success',1500);
+      });
+    });
+  }
+})();
+
+})();
+</script>
+</body>
+</html>
